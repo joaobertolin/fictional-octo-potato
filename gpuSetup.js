@@ -132,7 +132,7 @@ export async function setupWebGPU(canvasId) {
     });
 
     // 14 parámetros float enviados al shader
-    const simParamsBufferSize = 14 * 4;
+    const simParamsBufferSize = 15 * 4;
     simParamsBuffer = device.createBuffer({
         size: simParamsBufferSize,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -188,7 +188,7 @@ export function initializeParticles() {
         particleUints[uintBase + 7] = 0;
         typeCounts[ptype]++;
     }
-    console.log("Distribución de ptype:", typeCounts);
+    // console.log("Distribución de ptype:", typeCounts);
     device.queue.writeBuffer(particleBuffer, 0, particles);
 }
 
@@ -218,7 +218,8 @@ export function updateSimParamsBuffer() {
         numParticleTypes,
         ratioWithLFO,
         forceMultiplier,
-        400 // maxExpectedNeighbors
+        400, // maxExpectedNeighbors
+        forceOffset
     ]);
     device.queue.writeBuffer(simParamsBuffer, 0, simParams);
 }
@@ -287,7 +288,7 @@ export function renderSimulationFrame() {
     });
     renderPass.setPipeline(renderPipeline);
     renderPass.setBindGroup(0, renderBindGroup);
-    renderPass.draw(PARTICLE_COUNT * 4);
+    renderPass.draw(PARTICLE_COUNT);
     renderPass.end();
     device.queue.submit([encoder.finish()]);
 }
