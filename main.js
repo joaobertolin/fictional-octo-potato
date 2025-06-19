@@ -362,7 +362,7 @@ function addEventListeners() {
         canvas.height = window.innerHeight;
         GPU.setCanvasDimensions(canvas.width, canvas.height);
         GPU.updateSimParamsBuffer();
-        GPU.createPipelines();
+        // GPU.createPipelines();
     });
 
     startBtn.addEventListener('click', startRecording);
@@ -490,16 +490,23 @@ function addEventListeners() {
         reader.readAsText(file);
     });
 }
+let lastFrameTime = 0;
+const maxFPS = 60;
+const frameInterval = 1000 / maxFPS;
 
 function frame(currentTime) {
+    const delta = currentTime - lastFrameTime;
+    if (delta < frameInterval) {
+        requestAnimationFrame(frame);
+        return;
+    }
+    lastFrameTime = currentTime;
+
     GPU.updateSimParamsBuffer();
     GPU.renderSimulationFrame();
 
     if (isRecording) {
-        if (!lastCaptureTime) {
-            lastCaptureTime = currentTime;
-        }
-
+        if (!lastCaptureTime) lastCaptureTime = currentTime;
         const elapsed = currentTime - lastCaptureTime;
         if (elapsed >= desiredCaptureInterval) {
             mediaRecorder.requestData();
@@ -509,6 +516,7 @@ function frame(currentTime) {
 
     requestAnimationFrame(frame);
 }
+
 
 function setRecordingUI(state) {
     startBtn.disabled = state === 'recording';
