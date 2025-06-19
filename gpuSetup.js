@@ -71,6 +71,9 @@ const particleStructSize = 32;
 let particles = new ArrayBuffer(PARTICLE_COUNT * particleStructSize);
 let particleFloats = new Float32Array(particles);
 let particleUints = new Uint32Array(particles);
+let gridParticlesBuffer;
+let gridOffsetsBuffer;
+let gridCountsBuffer;
 
 // --- Funciones de utilidad ---
 function constrain(value, min, max) {
@@ -142,7 +145,26 @@ export async function setupWebGPU(canvasId) {
         size: numParticleTypes * 4,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
-
+    
+    const maxParticles = 10000;
+    const gridSize = 100; // 100x100 células
+    const maxParticlesPerCell = 64;
+    
+    gridParticlesBuffer = device.createBuffer({
+      size: maxParticles * 4,
+      usage: GPUBufferUsage.STORAGE,
+    });
+    
+    gridOffsetsBuffer = device.createBuffer({
+      size: gridSize * gridSize * 4,
+      usage: GPUBufferUsage.STORAGE,
+    });
+    
+    gridCountsBuffer = device.createBuffer({
+      size: gridSize * gridSize * 4,
+      usage: GPUBufferUsage.STORAGE,
+    });
+    
     initializeParticles();
     updateForceTable(true);
     initializeRadioByType();
@@ -239,6 +261,9 @@ export function createPipelines() {
             { binding: 1, resource: { buffer: forceTableBuffer } },
             { binding: 2, resource: { buffer: simParamsBuffer } },
             { binding: 3, resource: { buffer: radioByTypeBuffer } },
+            { binding: 4, resource: { buffer: gridParticlesBuffer } },
+            { binding: 5, resource: { buffer: gridOffsetsBuffer } },
+            { binding: 6, resource: { buffer: gridCountsBuffer } },
         ],
     });
 
